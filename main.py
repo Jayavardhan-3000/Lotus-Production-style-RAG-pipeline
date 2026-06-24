@@ -1,0 +1,24 @@
+from chunker import chunking
+from embedder import Embedder
+from vector_index import build_faiss_index,save_index_and_metadata, load_index_and_metadata, vector_store_exists
+from retriever import Retriever
+from generation import generate_answer
+from config import TOP_K,MODEL_NAME
+
+embedder = Embedder(model_name = MODEL_NAME)
+
+if vector_store_exists():
+    index, chunks = load_index_and_metadata()
+else:
+    chunks = chunking("Pride/sources")
+    chunks = embedder.embed_chunks(chunks)
+    index = build_faiss_index(chunks)
+    save_index_and_metadata(index, chunks)
+
+retriever = Retriever(embedder = embedder,index = index ,chunks = chunks, top_k = TOP_K)
+
+query = input("Enter your Query:\n")
+results = retriever.retrieve(query)
+
+answer = generate_answer(query, results)
+print(answer)

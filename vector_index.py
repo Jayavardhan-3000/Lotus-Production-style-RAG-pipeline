@@ -9,10 +9,9 @@ def vector_store_exists(save_dir: str = "./vector_store") -> bool:
     store = Path(save_dir)
     return ((store / "faiss.index").exists() and (store / "chunks.json").exists())
 
-def build_faiss_index(metadata: list[Chunk] ) -> faiss.IndexFlatIP:
-    if not metadata:
+def build_faiss_index(embeddings : list) -> faiss.IndexFlatIP:
+    if not embeddings:
         raise ValueError("Metadata couldn't be found!")
-    embeddings = [chunk["embedding"] for chunk in metadata]
     vectors = np.array(embeddings, dtype = "float32")
     dim = len(vectors[0])
     index = faiss.IndexFlatIP(dim)

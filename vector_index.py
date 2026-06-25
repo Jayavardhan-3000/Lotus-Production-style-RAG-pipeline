@@ -5,10 +5,14 @@ import json
 import faiss
 import logging
 import torch
+from a_timer import timer
+
+@timer
 def vector_store_exists(save_dir: str = "./vector_store") -> bool:
     store = Path(save_dir)
     return ((store / "faiss.index").exists() and (store / "chunks.json").exists())
 
+@timer
 def build_faiss_index(embeddings : torch.tensor) -> faiss.IndexFlatIP:
     if not embeddings:
         raise ValueError("Metadata couldn't be found!")
@@ -18,7 +22,7 @@ def build_faiss_index(embeddings : torch.tensor) -> faiss.IndexFlatIP:
     index.add(vectors)
     return index
 
-
+@timer
 def save_index_and_metadata(index : faiss.IndexFlatIP, chunks : list[Chunk], save_dir:str = './vector_store'):
     Path(save_dir).mkdir(exist_ok = True)
     faiss.write_index(index , f"{save_dir}/faiss.index")

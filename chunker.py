@@ -1,9 +1,10 @@
 from pathlib import Path #Using it so I can access all the required format files, can't be done context managers
 import hashlib #Need this to maintain idempotency, similar unique_id for similar chunks, gonna use in metadata
 import logging
-
 from chunk_type import Chunk
+from a_timer import timer
 
+@timer
 def chunking(directory : str, chunk_size : int = 300  , overlap_by :int = 30 ) -> list[Chunk]: #Type annotations, syntax- parameter: type = default
     if overlap_by >= chunk_size:
         raise ValueError("overlap_by must be smaller than chunk_size")

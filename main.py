@@ -4,19 +4,18 @@ from vector_index import build_faiss_index,save_index_and_metadata, load_index_a
 from retriever import Retriever
 from generation import generate_answer
 from dotenv import load_dotenv
-import os
 from config import TOP_K,MODEL_NAME
+import os
 
 load_dotenv()
 
 hf_token = os.getenv("HF_TOKEN")
 
 embedder = Embedder(model_name = MODEL_NAME, token = hf_token)
-
 if vector_store_exists():
     index, chunks = load_index_and_metadata()
 else:
-    chunks = chunking("E:\RAG Claude\Pride\sources")
+    chunks = chunking(r"RAG Claude\Pride\sources")
     print("Number of chunks:", len(chunks))
     print(chunks[:2])
     embeddings = embedder.embed_chunks(chunks)

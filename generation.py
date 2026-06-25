@@ -1,7 +1,9 @@
 from prompts import SYSTEM_PROMPT 
 from ollama import chat
 from config import LLM
+from a_timer import timer
 
+@timer
 def generate_answer(query: str, retrieved_chunks : list[dict]) -> str:
     context = "\n\n---\n\n".join(c["content"] for c in retrieved_chunks)
     response = chat(

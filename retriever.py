@@ -2,6 +2,7 @@ import faiss
 from chunk_type import Chunk
 import numpy as np
 from embedder import Embedder
+from a_timer import timer
 
 class Retriever():
     def __init__(self, embedder : Embedder, index : faiss.IndexFlatIP, chunks : list[Chunk], top_k : int):
@@ -15,6 +16,7 @@ class Retriever():
             normalize_embeddings=True,
             convert_to_numpy=True
         )
+    @timer
     def retrieve(self, query:str) -> list[dict]:
             query_embedding = self.embed_query(query)
             query_vector = np.asarray([query_embedding], dtype= np.float32)

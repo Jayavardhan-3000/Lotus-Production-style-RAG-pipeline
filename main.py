@@ -3,9 +3,15 @@ from embedder import Embedder
 from vector_index import build_faiss_index,save_index_and_metadata, load_index_and_metadata, vector_store_exists
 from retriever import Retriever
 from generation import generate_answer
+from dotenv import load_dotenv
+import os
 from config import TOP_K,MODEL_NAME
 
-embedder = Embedder(model_name = MODEL_NAME)
+load_dotenv()
+
+hf_token = os.getenv("HF_TOKEN")
+
+embedder = Embedder(model_name = MODEL_NAME, token = hf_token)
 
 if vector_store_exists():
     index, chunks = load_index_and_metadata()

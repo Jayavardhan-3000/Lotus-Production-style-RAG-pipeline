@@ -4,12 +4,12 @@ import numpy as np
 import json
 import faiss
 import logging
-
+import torch
 def vector_store_exists(save_dir: str = "./vector_store") -> bool:
     store = Path(save_dir)
     return ((store / "faiss.index").exists() and (store / "chunks.json").exists())
 
-def build_faiss_index(embeddings : list) -> faiss.IndexFlatIP:
+def build_faiss_index(embeddings : torch.tensor) -> faiss.IndexFlatIP:
     if not embeddings:
         raise ValueError("Metadata couldn't be found!")
     vectors = np.array(embeddings, dtype = "float32")

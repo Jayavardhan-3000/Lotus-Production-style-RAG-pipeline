@@ -8,6 +8,8 @@ def chunking(directory : str, chunk_size : int = 300  , overlap_by :int = 30 ) -
     if overlap_by >= chunk_size:
         raise ValueError("overlap_by must be smaller than chunk_size")
     metadata : list[Chunk] = []
+    print("Directory:", directory)
+    print("Files found:", list(Path(directory).glob("*.txt")))
     for path in sorted(Path(directory).glob("*.txt")):#Iterate through the iterator
         with path.open("r", encoding = "utf-8") as file: #Opening the file via context manager 
             text = file.read()
@@ -31,4 +33,9 @@ def chunking(directory : str, chunk_size : int = 300  , overlap_by :int = 30 ) -
                         "content"  : chunk
                     })
     logging.info(f"Loaded all {len(metadata)} from {directory}")
+    print("Metadata length:", len(metadata))
+    if not metadata:
+        raise ValueError(
+        f"No chunks generated. Check directory '{directory}' and ensure .txt files contain text."
+    )
     return metadata

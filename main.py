@@ -10,9 +10,11 @@ embedder = Embedder(model_name = MODEL_NAME)
 if vector_store_exists():
     index, chunks = load_index_and_metadata()
 else:
-    chunks = chunking("Pride/sources")
-    chunks = embedder.embed_chunks(chunks)
-    index = build_faiss_index(chunks)
+    chunks = chunking("E:\RAG Claude\Pride\sources")
+    print("Number of chunks:", len(chunks))
+    print(chunks[:2])
+    embeddings = embedder.embed_chunks(chunks)
+    index = build_faiss_index(embeddings)
     save_index_and_metadata(index, chunks)
 
 retriever = Retriever(embedder = embedder,index = index ,chunks = chunks, top_k = TOP_K)

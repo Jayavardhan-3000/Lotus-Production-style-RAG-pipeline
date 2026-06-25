@@ -9,9 +9,6 @@ class Embedder:
         if not metadata:
             raise ValueError("Given metadata is empty!")
         all_embeddings = []
-        for i in range(0, len(metadata), batch_size):
-            batch = metadata[i:i + batch_size]
-            texts = [chunk["content"] for chunk in batch]
-            batch_embeddings = self.model.encode(texts, normalize_embeddings= True, convert_to_numpy = False, show_progress_bar= False, batch_size=batch_size)
-            all_embeddings.append(batch_embeddings.tolist())
+        texts = [chunk["content"] for chunk in metadata]
+        all_embeddings = self.model.encode(texts, normalize_embeddings= True, convert_to_numpy = False, show_progress_bar= False, batch_size=batch_size)
         return all_embeddings

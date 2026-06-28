@@ -37,7 +37,7 @@ rag-pipeline/
 ├── prompts.py         # System prompt for the LLM
 ├── chunk_type.py      # TypedDict definition for a Chunk
 ├── config.py          # Central config (model names, TOP_K, paths)
-├── a_timer.py         # Timing decorator used across modules
+├── utils.py         # Timing decorator used across modules
 ├── sources/           # Drop your .txt documents here
 └── vector_store/      # Auto-created — stores faiss.index and chunks.json
 ```

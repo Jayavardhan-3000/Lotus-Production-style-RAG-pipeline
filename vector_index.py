@@ -14,7 +14,7 @@ def vector_store_exists(save_dir: str = "./vector_store") -> bool:
 
 @timer
 def build_faiss_index(embeddings : torch.tensor) -> faiss.IndexFlatIP:
-    if not embeddings:
+    if embeddings is None or len(embeddings) == 0:
         raise ValueError("Metadata couldn't be found!")
     vectors = np.array(embeddings, dtype = "float32")
     dim = len(vectors[0])

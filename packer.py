@@ -88,7 +88,6 @@ def pack_section(
 
     return chunks
 
-
 def pack_sections(
     sections: list[Section],
     token_counter,
@@ -96,7 +95,6 @@ def pack_sections(
     max_tokens: int = 800
 ):
     chunks = []
-
     for section in sections:
         chunks.extend(
             pack_section(

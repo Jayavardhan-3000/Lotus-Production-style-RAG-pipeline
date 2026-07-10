@@ -25,9 +25,9 @@ class AtomicBlock:
     
 @dataclass
 class MermaidDiagram:
-    block_index: int
-    offset: int
+    previous: str
     content: str
+    following : str
     
 @dataclass
 class Section:

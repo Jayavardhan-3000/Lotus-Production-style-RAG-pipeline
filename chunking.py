@@ -38,7 +38,7 @@ def chunker(data: dict[str, list[ParsedPage]]) -> list[Chunk]:
                         page=page.page_number,
                         contains_image=False,
                         contains_table=False,
-                        contains_formulas=False
+                        contains_formulas=False,
                     )
                     current_content = []
                     i += 1
@@ -48,6 +48,11 @@ def chunker(data: dict[str, list[ParsedPage]]) -> list[Chunk]:
                     continue
                 if line.startswith("'''mermaid"):
                     current_chunk.contains_image = True
+                    previous = ""
+                    for j in range(len(current_content) - 1, -1, -1):
+                        if current_content[j].strip():
+                            previous = current_content[j]
+                            break
                     mermaid = [line]
                     i += 1
                     while i < len(lines):
@@ -55,10 +60,26 @@ def chunker(data: dict[str, list[ParsedPage]]) -> list[Chunk]:
                         if lines[i].strip() == "'''":
                             break
                         i += 1
+                    following = ""
+                    k = i + 1
+                    while k < len(lines):
+                        next_line = lines[k].strip()
+                        if not next_line:
+                            k += 1
+                            continue
+                        if Heading_pattern.match(next_line):
+                            break
+                        if next_line.startswith("'''mermaid"):
+                            break
+                        if next_line.startswith("<table>"):
+                            break
+                        following = next_line
+                        break
                     current_chunk.mermaid_diagrams.append(
                         MermaidDiagram(
-                            index=len(current_content),
-                            content="\n".join(mermaid)
+                            previous=previous,
+                            content="\n".join(mermaid),
+                            following=following,
                         )
                     )
                     i += 1

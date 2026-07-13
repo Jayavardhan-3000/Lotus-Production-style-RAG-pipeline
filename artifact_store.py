@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from chunk_type import MermaidDiagram, Section
+from datastructures import MermaidDiagram, Section
 
 class ArtifactStore:
     @staticmethod

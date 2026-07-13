@@ -1,4 +1,4 @@
-from chunk_type import Chunk
+from datastructures import Chunk
 from pathlib import Path
 import numpy as np
 import json

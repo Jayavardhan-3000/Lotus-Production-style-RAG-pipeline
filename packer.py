@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from chunk_type import Chunk, Section
+from datastructures import Chunk, Section
 from recursive_split import recursive_split
 
 def build_content(blocks) -> str:

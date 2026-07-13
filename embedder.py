@@ -1,6 +1,6 @@
 from sentence_transformers import SentenceTransformer
 from utils import timer
-from chunk_type import Chunk
+from datastructures import Chunk
 import torch
 
 class Embedder:

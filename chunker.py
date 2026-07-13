@@ -2,7 +2,7 @@ import hashlib
 import re
 from copy import deepcopy
 
-from chunk_type import AtomicBlock, MermaidDiagram, Section
+from datastructures import AtomicBlock, MermaidDiagram, Section
 from parser.enums import BlockType
 from parser.parsed_page import ParsedPage
 

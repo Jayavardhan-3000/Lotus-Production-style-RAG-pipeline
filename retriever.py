@@ -1,5 +1,5 @@
 import faiss
-from chunk_type import Chunk
+from datastructures import Chunk
 import numpy as np
 from embedder import Embedder
 from utils import timer

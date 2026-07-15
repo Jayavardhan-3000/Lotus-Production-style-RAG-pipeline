@@ -5,7 +5,8 @@ from vector_index import build_faiss_index,save_index_and_metadata, load_index_a
 from retriever import Retriever
 from generation import generate_answer
 from dotenv import load_dotenv
-from config import TOP_K,MODEL_NAME, SOURCES_PATH
+from config import TOP_K,MODEL_NAME, SOURCES_PATH, FINAL_TOP_K
+from reranker import Reranker
 import os
 import asyncio
 load_dotenv()
@@ -14,7 +15,6 @@ hf_token = os.getenv("HF_TOKEN")
 Parser_API_Key = os.getenv("LLAMA_CLOUD_API_KEY")
 embedder = Embedder(model_name = MODEL_NAME, token = hf_token)
 parser = markdown_parser.Markdown_parser(SOURCES_PATH, Parser_API_Key)
-
 async def main():
     if vector_store_exists():
         index, chunks = load_index_and_metadata()
@@ -32,7 +32,7 @@ async def main():
 
     query = input("Enter your Query:\n")
     results = retriever.retrieve(query)
-
+    reranked_results = Reranker(query,results = results, final_top_k = FINAL_TOP_K )
     generate_answer(query, results)
 
 if __name__ == "__main__":

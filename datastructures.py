@@ -50,3 +50,23 @@ class PackedPart:
 class RetrievalResult:
     chunk: Chunk
     score: float
+    
+@dataclass
+class QueryAnalysis:
+    original_query: str
+    normalized_query: str
+    needs_mermaid: bool
+    needs_formula: bool
+    needs_code: bool
+    intent: str
+    
+@dataclass
+class MermaidRetrievalResult:
+    diagram: MermaidDiagram
+    score: float
+    
+@dataclass
+class Context:
+    query: str
+    chunks: list[Chunk]
+    diagrams: list[MermaidDiagram]

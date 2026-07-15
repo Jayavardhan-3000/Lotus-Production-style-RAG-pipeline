@@ -78,8 +78,8 @@ def pack_section(
 def pack_sections(
     sections: list[Section],
     token_counter,
-    target_tokens: int = 600,
-    max_tokens: int = 800
+    target_tokens: int = 350,
+    max_tokens: int = 450
 ) -> list[Chunk]:
     chunks = []
     chunk_id = 0

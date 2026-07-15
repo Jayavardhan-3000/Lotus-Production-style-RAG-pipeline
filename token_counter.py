@@ -1,6 +1,8 @@
-import tiktoken
+from transformers import AutoTokenizer
 
-ENCODER = tiktoken.encoding_for_model("gpt-4o-mini")
+TOKENIZER = AutoTokenizer.from_pretrained(
+    "BAAI/bge-small-en-v1.5"
+)
 
 def count_tokens(text: str) -> int:
-    return len(ENCODER.encode(text))
+    return len(TOKENIZER.encode(text))

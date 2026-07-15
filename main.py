@@ -1,39 +1,68 @@
-from chunker import chunking
-from embedder import Embedder
-from parser import markdown_parser
-from vector_index import build_faiss_index,save_index_and_metadata, load_index_and_metadata, vector_store_exists
-from retriever import Retriever
-from generation import generate_answer
-from dotenv import load_dotenv
-from config import TOP_K,MODEL_NAME, SOURCES_PATH, FINAL_TOP_K
-from reranker import Reranker
-import os
 import asyncio
+import os
+from dotenv import load_dotenv
+from artifact_store import ArtifactStore
+import chunker
+import packer
+from config import MODEL_NAME,GROQ_MODEL,TOP_K,FINAL_TOP_K,SOURCES_PATH
+from context_builder import ContextBuilder
+from embedder import Embedder
+from generation import LLM
+from mermaid_retriever import MermaidRetriever
+from parser.markdown_parser import MarkdownParser
+from prompt_builder import PromptBuilder
+from query_analyzer import QueryAnalyzer
+from reranker import Reranker
+from retriever import Retriever
+from rrf import reciprocal_rank_fusion
+from token_counter import count_tokens
+from vector_index import build_faiss_index, load_index_and_metadata, save_index_and_metadata,vector_store_exists
+
 load_dotenv()
 
-hf_token = os.getenv("HF_TOKEN")
-Parser_API_Key = os.getenv("LLAMA_CLOUD_API_KEY")
-embedder = Embedder(model_name = MODEL_NAME, token = hf_token)
-parser = markdown_parser.Markdown_parser(SOURCES_PATH, Parser_API_Key)
+HF_TOKEN = os.getenv("HF_TOKEN")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+async def build_vector_store(embedder: Embedder):
+    parser = MarkdownParser(SOURCES_PATH)
+    parsed_pages = await parser.parse_directory()
+    sections = chunker.chunker(parsed_pages)
+    ArtifactStore.save(sections,"./vector_store/artifacts.json")
+    chunks = packer.pack_sections( sections,count_tokens)
+    embeddings = embedder.embed_chunks(chunks)
+    index = build_faiss_index(embeddings)
+    save_index_and_metadata(index,chunks)
+    artifact_store = ArtifactStore.load("./vector_store/artifacts.json")
+    return index, chunks, artifact_store
+
+
 async def main():
+    embedder = Embedder(model_name=MODEL_NAME,token=HF_TOKEN)
     if vector_store_exists():
         index, chunks = load_index_and_metadata()
+        artifact_store = ArtifactStore.load("./vector_store/artifacts.json")
     else:
-        parser = markdown_parser.MarkdownParser("sources")
-        documents = await parser.parse_directory()
-        chunks = chunking(documents)
-        print("Number of chunks:", len(chunks))
-        print(chunks[:2])
-        embeddings = embedder.embed_chunks(chunks)
-        index = build_faiss_index(embeddings)
-        save_index_and_metadata(index, chunks)
-
-    retriever = Retriever(embedder = embedder,index = index ,chunks = chunks, top_k = TOP_K)
-
-    query = input("Enter your Query:\n")
-    results = retriever.retrieve(query)
-    reranked_results = Reranker(query,results = results, final_top_k = FINAL_TOP_K )
-    generate_answer(query, results)
+        index, chunks, artifact_store = await build_vector_store(embedder)
+    retriever = Retriever(embedder=embedder,index=index,chunks=chunks,top_k=TOP_K)
+    reranker = Reranker(model_name="BAAI/bge-reranker-base")
+    analyzer = QueryAnalyzer()
+    mermaid_retriever = MermaidRetriever(embedder=embedder,artifact_store=artifact_store)
+    context_builder = ContextBuilder()
+    prompt_builder = PromptBuilder()
+    llm = LLM(api_key=GROQ_API_KEY,model=GROQ_MODEL)
+    while True:
+        query = input("\nQuery > ").strip()
+        if query.lower() in {"exit", "quit"}:
+            break
+        analysis = analyzer.analyze(query)
+        semantic_results, bm25_results = retriever.retrieve(query)
+        retrieval_results = reciprocal_rank_fusion(semantic_results,  bm25_results)
+        reranked_results = reranker.rerank(query=query,results=retrieval_results, final_top_k=FINAL_TOP_K)
+        mermaid_results = mermaid_retriever.retrieve(query=query,  analysis=analysis, retrieval_results=reranked_results)
+        context = context_builder.build(query=query, analysis=analysis, retrieval_results=reranked_results,mermaid_results=mermaid_results)
+        prompt = prompt_builder.build( context )
+        print("\nAnswer:\n")
+        llm.generate_answer(prompt)
 
 if __name__ == "__main__":
     asyncio.run(main())

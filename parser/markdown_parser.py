@@ -4,7 +4,7 @@ from pathlib import Path
 
 from llama_cloud import AsyncLlamaCloud
 from dotenv import load_dotenv
-from parsed_page import ParsedPage
+from .parsed_page import ParsedPage
 
 load_dotenv()
 

@@ -1,7 +1,7 @@
 from enum import Enum
 
 class BlockType(Enum):
-    PARAGRAPH = "paragraph"
+    TEXT = "text"
     TABLE = "table"
     LIST = "list"
     CODE = "code"

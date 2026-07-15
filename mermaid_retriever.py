@@ -14,7 +14,7 @@ class MermaidRetriever:
         return float(np.dot(a, b))
 
     @timer
-    def retrieve(query: str, analysis: QueryAnalysis,  retrieval_results: list[RetrievalResult] ) -> list[MermaidRetrievalResult]:
+    def retrieve(self, query: str, analysis: QueryAnalysis,  retrieval_results: list[RetrievalResult] ) -> list[MermaidRetrievalResult]:
         if not analysis.needs_mermaid:
             return []
         if not retrieval_results:

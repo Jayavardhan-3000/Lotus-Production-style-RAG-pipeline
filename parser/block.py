@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from parser import(BlockType, Metadata)
+from .enums import BlockType
+from .metadata import Metadata
 @dataclass
 class Block:
     type : BlockType

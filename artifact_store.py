@@ -6,6 +6,7 @@ from datastructures import MermaidDiagram, Section
 class ArtifactStore:
     @staticmethod
     def save(sections: list[Section], path: str | Path):
+        Path(path).parent.mkdir(parents=True,exist_ok=True)
         data = {}
         for section in sections:
             if not section.mermaid_diagrams:

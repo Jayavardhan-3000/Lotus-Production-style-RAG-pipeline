@@ -15,10 +15,9 @@ class Retriever():
         self.bm25 = BM25Okapi(self.corpus)
     @timer
     def semantic_retrieve(self, query:str) -> list[RetrievalResult]:
-        if top_k <= 0:
+        if self.top_k <= 0:
             logging.warning("top_k must be greater than 0. Using default value of 3.")            
-        top_k = 3
-        self.top_k = top_k
+            self.top_k = 3
         query_embedding = self.embedder.embed_query(query)
         query_vector = np.asarray([query_embedding], dtype= np.float32)
         scores, indices = self.index.search(query_vector, self.top_k)

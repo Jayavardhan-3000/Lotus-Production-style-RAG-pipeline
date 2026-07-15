@@ -30,6 +30,7 @@ class Section:
     
 @dataclass
 class Chunk:
+    chunk_id: int
     content: str
     source: str
     title: str
@@ -44,3 +45,8 @@ class Chunk:
 class PackedPart:
     content: str
     tokens: int
+
+@dataclass
+class RetrievalResult:
+    chunk: Chunk
+    score: float

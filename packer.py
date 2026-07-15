@@ -1,13 +1,13 @@
 from copy import deepcopy
-
-from datastructures import Chunk, Section
+from datastructures import Chunk, Section, AtomicBlock
 from recursive_split import recursive_split
 
-def build_content(blocks) -> str:
+def build_content(blocks : list[AtomicBlock]) -> str:
     return "\n\n".join(block.content for block in blocks)
 
-def create_chunk(section: Section, blocks) -> Chunk:
+def create_chunk(section: Section, blocks: list[AtomicBlock], chunk_id : int) -> Chunk:
     return Chunk(
+        chunk_id = chunk_id,
         content=build_content(blocks),
         source=section.source,
         title=section.title,
@@ -19,9 +19,8 @@ def create_chunk(section: Section, blocks) -> Chunk:
         section_id=section.section_id
     )
 
-def expand_blocks(section: Section, token_counter, max_tokens: int):
+def expand_blocks(section: Section, token_counter, max_tokens: int)-> list[AtomicBlock]:
     expanded = []
-
     for block in section.blocks:
         if token_counter(block.content) <= max_tokens:
             expanded.append(block)
@@ -38,9 +37,10 @@ def expand_blocks(section: Section, token_counter, max_tokens: int):
 def pack_section(
     section: Section,
     token_counter,
+    chunk_id : int,
     target_tokens: int = 600,
     max_tokens: int = 800
-) -> list[Chunk]:
+) -> tuple[list[Chunk],int]:
     blocks = expand_blocks(
         section,
         token_counter,
@@ -55,9 +55,11 @@ def pack_section(
             chunks.append(
                 create_chunk(
                     section,
-                    current_blocks
+                    current_blocks,
+                    chunk_id
                 )
             )
+            chunk_id += 1
             current_blocks = []
             current_tokens = 0
         current_blocks.append(block)
@@ -66,11 +68,12 @@ def pack_section(
         chunks.append(
             create_chunk(
                 section,
-                current_blocks
+                current_blocks,
+                chunk_id
             )
         )
-
-    return chunks
+        chunk_id += 1
+    return chunks, chunk_id
 
 def pack_sections(
     sections: list[Section],
@@ -79,14 +82,14 @@ def pack_sections(
     max_tokens: int = 800
 ) -> list[Chunk]:
     chunks = []
+    chunk_id = 0
     for section in sections:
-        chunks.extend(
-            pack_section(
-                section,
-                token_counter,
-                target_tokens,
-                max_tokens
-            )
+        section_chunks, chunk_id = pack_section(
+            section,
+            token_counter,
+            chunk_id,
+            target_tokens,
+            max_tokens
         )
-
+        chunks.extend(section_chunks)
     return chunks

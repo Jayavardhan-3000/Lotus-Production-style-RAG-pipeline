@@ -4,6 +4,7 @@ A modular, section-aware document indexing pipeline built for Retrieval-Augmente
 
 ---
 
+
 ## Motivation
 
 Most RAG pipelines follow a simple workflow:

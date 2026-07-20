@@ -1,10 +1,4 @@
 <p align="center">
-  <img src="architecture/architecture.png" alt="LOTUS Engine Architecture" width="100%">
-</p>
-
-<h1 align="center">LOTUS Engine</h1>
-
-<p align="center">
   <strong>A Structure-Aware Hybrid Retrieval Engine for Retrieval-Augmented Generation (RAG)</strong>
 </p>
 
@@ -47,6 +41,11 @@ produce high-quality context for Large Language Models.
 -   Modular benchmark suite
 
 ------------------------------------------------------------------------
+<p align="center">
+  <img src="architecture/architecture.png"
+       alt="LOTUS Engine Architecture"
+       width="100%">
+</p>
 
 # Motivation
 

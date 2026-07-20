@@ -1,120 +1,99 @@
-# Lotus - Production level RAG Pipeline 
-
-A modular, section-aware document indexing pipeline built for Retrieval-Augmented Generation (RAG). Rather than treating a document as plain text, this project preserves document structure, separates visual artifacts from textual content, and produces retrieval-optimized chunks while maintaining semantic integrity.
-
----
-
-
-## Motivation
-
-Most RAG pipelines follow a simple workflow:
-
+```{=html}
+<p align="center">
 ```
+`<img src="architecture/architecture.png" alt="LOTUS Engine Architecture" width="100%">`{=html}
+```{=html}
+</p>
+```
+```{=html}
+<h1 align="center">
+```
+ LOTUS Engine
+```{=html}
+</h1>
+```
+```{=html}
+<p align="center">
+```
+`<b>`{=html}A Structure-Aware Hybrid Retrieval Engine for
+Retrieval-Augmented Generation (RAG)`</b>`{=html}
+```{=html}
+</p>
+```
+```{=html}
+<p align="center">
+```
+Hybrid Retrieval • Structure-Aware Chunking • Cross-Encoder Reranking •
+Artifact Retrieval
+```{=html}
+</p>
+```
+
+------------------------------------------------------------------------
+
+## Overview
+
+LOTUS Engine is a modular retrieval engine designed for long-form
+technical documents.
+
+Instead of treating documents as flat streams of text, LOTUS preserves
+semantic structure throughout ingestion and retrieval. It combines
+structure-aware chunking, hybrid search (Dense + BM25), Reciprocal Rank
+Fusion (RRF), cross-encoder reranking, and artifact-aware retrieval to
+produce high-quality context for Large Language Models.
+
+> **Design Philosophy:** Documents should be represented as structured
+> knowledge---not as disconnected token windows.
+
+------------------------------------------------------------------------
+
+# Features
+
+-   Structure-aware document parsing
+-   Hierarchical heading preservation
+-   Atomic paragraph blocks
+-   Recursive fallback splitting
+-   Token-aware chunk packing
+-   Dense semantic retrieval
+-   BM25 lexical retrieval
+-   Reciprocal Rank Fusion (RRF)
+-   Cross-encoder reranking
+-   Context-aware Mermaid retrieval
+-   Streaming LLM generation
+-   Modular benchmark suite
+
+------------------------------------------------------------------------
+
+# Motivation
+
+Most RAG systems follow:
+
+``` text
 PDF
-    ↓
+ ↓
 Extract Text
-    ↓
-Split Every N Tokens
-    ↓
-Embed
-```
-
-
-
-Although simple, this approach introduces several problems:
-
-* Sections are broken arbitrarily.
-* Long paragraphs lose semantic continuity.
-* Visual artifacts such as Mermaid diagrams are embedded as meaningless text.
-* Tables and formulas are often mishandled.
-* Multiple diagrams inside the same section cannot be retrieved accurately.
-
-This project approaches document indexing differently.
-
-Instead of viewing a document as one continuous stream of text, it treats the document as a hierarchy of semantic units and indexes them accordingly.
-
----
-
-# Design Philosophy
-
-This project follows a few fundamental principles.
-
-## Sections are the source of truth
-
-A document is first divided into semantic sections using markdown headings.
-
-Everything else is derived from these sections.
-
-```
-Document
-    │
-    ▼
-Section
-    ├── Metadata
-    ├── Paragraph Blocks
-    ├── Visual Artifacts
-    └── Structural Information
-```
-
-Sections remain intact throughout parsing.
-
----
-
-## Chunks are retrieval units
-
-Chunks are **not** the document representation.
-
-Chunks exist solely for efficient embedding and retrieval.
-
-```
-Section
-      │
-      ▼
-Chunk Packing
-      │
-      ▼
-Chunks
-      │
-      ▼
+ ↓
+Fixed Token Chunking
+ ↓
 Embeddings
+ ↓
+Vector Search
 ```
 
----
+While simple, this introduces arbitrary chunk boundaries, broken
+semantic continuity, poor handling of diagrams and tables, and lower
+retrieval precision.
 
-## Artifacts are independent
+LOTUS instead models a document as a hierarchy of semantic units and
+builds retrieval around that hierarchy.
 
-Visual artifacts should never participate in chunking.
+------------------------------------------------------------------------
 
-Instead, they are extracted during parsing and stored independently.
+# System Architecture
 
-Current supported artifact:
+``` text
+                    INGESTION
 
-* Mermaid Diagrams
-
-Future artifacts may include:
-
-* Images
-* SVGs
-* Flowcharts
-* Tables
-* UML Diagrams
-* Mathematical Figures
-
----
-
-## Parsing before optimization
-
-The parser captures the document faithfully.
-
-Optimization happens later.
-
-Parsing should never make decisions based on embedding models or vector databases.
-
----
-
-# Pipeline
-
-```
 PDF
  │
  ▼
@@ -127,305 +106,236 @@ Markdown
 Chunker
  │
  ▼
-Sections
- ├──────────────┐
- │              │
- ▼              ▼
-Packer      Artifact Store
- │              │
- ▼              ▼
-Chunks     artifacts.json
- │
- ▼
-Embedder
+Semantic Sections
+ ├───────────────┐
+ │               │
+ ▼               ▼
+Chunk Packer   Artifact Store
+ │               │
+ ▼               ▼
+Embeddings    Mermaid Metadata
  │
  ▼
 Vector Database
+
+
+                    RETRIEVAL
+
+User Query
+     │
+     ▼
+Dense Search
+     │
+BM25 Search
+     │
+     ▼
+Reciprocal Rank Fusion
+     │
+     ▼
+Cross Encoder Reranker
+     │
+     ▼
+Context Builder
+     │
+     ▼
+Artifact Retrieval
+     │
+     ▼
+LLM
+     │
+     ▼
+Final Response
 ```
 
----
+------------------------------------------------------------------------
 
-# Architecture
+# Ingestion
 
-## Chunker
+1.  Parse markdown into semantic sections.
+2.  Preserve heading hierarchy.
+3.  Build atomic paragraph blocks.
+4.  Extract Mermaid diagrams.
+5.  Recursively split oversized blocks.
+6.  Pack blocks into retrieval chunks.
+7.  Generate embeddings.
+8.  Index into the vector store.
 
-Responsible for converting parsed markdown into semantic sections.
+------------------------------------------------------------------------
 
-Responsibilities:
+# Retrieval Pipeline
 
-* Detect markdown headings
-* Preserve heading hierarchy
-* Build paragraph blocks
-* Detect tables
-* Detect formulas
-* Extract Mermaid diagrams
-* Generate deterministic section identifiers
-
-Output:
-
-```
-list[Section]
-```
-
----
-
-## Recursive Splitter
-
-Large paragraph blocks occasionally exceed embedding limits.
-
-Instead of splitting the entire document, only oversized blocks are recursively divided.
-
-The splitter follows a simple strategy:
-
-1. If the block fits → keep it.
-2. Split by lines.
-3. If only one line exists, split by words.
-4. Continue recursively until every block satisfies the token limit.
-
-The splitter acts as a safety mechanism rather than the primary chunking algorithm.
-
----
-
-## Packer
-
-The packer converts sections into retrieval chunks.
-
-Responsibilities:
-
-* Expand oversized blocks
-* Pack blocks into target token sizes
-* Preserve section metadata
-* Produce retrieval-ready chunks
-
-The packer does **not** know anything about Mermaid diagrams or artifact selection.
-
----
-
-## Artifact Store
-
-Artifacts are stored independently from chunks.
-
-Current implementation stores:
-
-```
-section_id
-    │
-    ▼
-Mermaid Diagrams
-```
-
-Artifacts are serialized into JSON.
-
-Chunks only maintain a reference to the originating section.
-
----
-
-## Embedder
-
-Chunks are embedded for retrieval.
-
-Artifacts are intentionally excluded from chunk embeddings.
-
-Instead, lightweight embeddings are generated only for the contextual paragraphs surrounding each artifact.
-
----
-
-## Retriever
-
-Retrieval happens in two stages.
-
-### Stage 1
-
-Retrieve the most relevant chunks using vector similarity.
-
-```
+``` text
 Query
-    │
-    ▼
-Vector Database
-    │
-    ▼
-Top-k Chunks
+  │
+  ├── Dense Retrieval
+  ├── BM25 Retrieval
+  │
+  ▼
+Reciprocal Rank Fusion
+  │
+  ▼
+Cross-Encoder Reranker
+  │
+  ▼
+Context Builder
+  │
+  ▼
+Artifact Retrieval (if required)
+  │
+  ▼
+LLM Response
 ```
 
----
+Dense retrieval captures semantic similarity, BM25 captures lexical
+matches, RRF combines both rankings, and a cross-encoder reranker
+produces the final high-quality ordering before generation.
 
-### Stage 2
-
-If the user explicitly requests a visual artifact:
-
-* Identify retrieved sections.
-* Load corresponding artifacts.
-* Compare the query with local contextual embeddings.
-* Select the most relevant artifact.
-
-```
-Top-k Chunks
-      │
-      ▼
-Artifact Store
-      │
-      ▼
-Local Similarity
-      │
-      ▼
-Best Mermaid Diagram
-```
-
----
+------------------------------------------------------------------------
 
 # Chunking Strategy
 
-Unlike traditional chunkers, this project does not split text immediately by token count.
+Instead of fixed-size token chunking:
 
-Instead:
+``` text
+Markdown
+    ↓
+Semantic Sections
+    ↓
+Atomic Paragraph Blocks
+    ↓
+Recursive Split (only if necessary)
+    ↓
+Token-aware Packing
+    ↓
+Embeddings
+```
 
-1. Parse semantic sections.
-2. Convert paragraphs into atomic blocks.
-3. Preserve tables independently.
-4. Extract artifacts.
-5. Split only oversized paragraph blocks.
-6. Pack blocks into retrieval chunks.
+Chunks are retrieval units---not document representations.
 
-This significantly reduces unnecessary semantic fragmentation.
+------------------------------------------------------------------------
 
----
-
-# Mermaid Retrieval
+# Mermaid Artifact Retrieval
 
 Mermaid diagrams are never embedded directly.
 
-Each diagram stores:
+Each artifact stores:
 
-* Previous paragraph
-* Following paragraph
-* Diagram content
+-   Previous paragraph
+-   Following paragraph
+-   Section metadata
 
-During indexing, lightweight embeddings are generated for the surrounding paragraphs.
+When a diagram is requested:
 
-During retrieval:
-
-```
-Query
-     │
-     ▼
-Previous Paragraph Embedding
-
-Following Paragraph Embedding
-```
-
-The resulting similarity scores determine which diagram best answers the user's request.
-
-This avoids embedding diagram syntax while still allowing accurate diagram retrieval.
-
----
-
-# Section Identifiers
-
-Every section receives a deterministic SHA-256 identifier derived from:
-
-```
-source + heading_path
+``` text
+Retrieved Sections
+      ↓
+Artifact Store
+      ↓
+Context Similarity
+      ↓
+Best Matching Diagram
 ```
 
-Advantages:
+This keeps chunk embeddings clean while enabling accurate visual
+retrieval.
 
-* Stable across re-indexing
-* No random UUIDs
-* Easy artifact lookup
-* Consistent references
+------------------------------------------------------------------------
 
----
+# Repository Structure
 
-# Directory Structure
-
-```
-project/
+``` text
+LOTUS/
+│
+├── architecture/
+│   └── architecture.png
+│
+├── benchmark/
+│   ├── bench_generation.py
+│   ├── bench_latency.py
+│   ├── bench_retrieval.py
+│   └── run_all.py
 │
 ├── parser/
-│   ├── parsed_page.py
-│   ├── enums.py
-│   └── ...
+├── retrieval/
+├── vector_store/
 │
-├── chunk_type.py
-├── chunker.py
-├── recursive_split.py
-├── packer.py
 ├── artifact_store.py
+├── chunker.py
+├── packer.py
+├── recursive_split.py
 ├── embedder.py
 ├── retriever.py
-├── vector_store.py
-└── indexer.py
+├── generator.py
+├── indexer.py
+└── main.py
 ```
 
----
+------------------------------------------------------------------------
 
-# Why not Token Chunking?
+# Benchmarks
 
-Fixed-size chunking often introduces several issues.
+## Retrieval Quality
 
-```
-Paragraph
-──────────────┐
-              ▼
-        Split Here
-```
+  --------------------------------------------------------------------------------------
+  Method           Recall@1    Recall@3    Recall@5    Recall@10         MRR      nDCG@5
+  ------------- ----------- ----------- ----------- ------------ ----------- -----------
+  Semantic            0.400       0.600       0.700        0.800       0.524       0.554
 
-The resulting chunks frequently lose semantic continuity.
+  BM25                0.675       0.750       0.750        0.825       0.722       0.719
 
-Instead, this project prioritizes preserving natural document structure before considering embedding constraints.
+  Hybrid (RRF)        0.525       0.750       0.750        0.800       0.639       0.654
 
----
+  **LOTUS         **0.625**   **0.800**   **0.900**    **0.975**   **0.740**   **0.772**
+  (Hybrid +                                                                  
+  Reranker)**                                                                
+  --------------------------------------------------------------------------------------
 
-# Why Artifacts are Separate
+The reranking stage substantially improves retrieval quality while
+maintaining a modular retrieval architecture.
 
-Visual artifacts are fundamentally different from textual knowledge.
+## Retrieval Latency
 
-Embedding Mermaid syntax rarely provides meaningful semantic information.
+  Stage                          Mean
+  ------------------------- ---------
+  Query Analysis               0.2 ms
+  Dense + BM25 Retrieval      22.6 ms
+  Reciprocal Rank Fusion       0.1 ms
+  Cross-Encoder Reranking     1383 ms
 
-By separating artifacts:
+The cross-encoder reranker is the primary latency bottleneck, but also
+contributes the largest improvement in retrieval accuracy.
 
-* Chunk embeddings remain clean.
-* Retrieval quality improves.
-* Visual content can evolve independently.
-* Future artifact types integrate naturally.
+------------------------------------------------------------------------
 
----
+# Design Principles
 
-# Current Features
+-   Preserve document structure before optimization.
+-   Chunks are retrieval units.
+-   Parsing remains deterministic.
+-   Separate artifacts from textual knowledge.
+-   Prefer retrieval quality over simplistic token chunking.
+-   Keep every component modular and replaceable.
 
-* Section-aware parsing
-* Paragraph-based atomic blocks
-* Recursive fallback splitting
-* Token-aware chunk packing
-* Heading hierarchy preservation
-* Table detection
-* Formula detection
-* Mermaid extraction
-* Artifact serialization
-* Deterministic section identifiers
+------------------------------------------------------------------------
 
----
+# Future Roadmap
 
-# Future Improvements
+-   Hierarchical retrieval
+-   Adaptive chunk packing
+-   Image & SVG retrieval
+-   Formula rendering
+-   Metadata-aware reranking
+-   Incremental indexing
+-   Qdrant support
+-   Multi-modal retrieval
+-   Contextual retrieval
+-   Agentic retrieval workflows
 
-* Multi-artifact support
-* Image retrieval
-* SVG artifact support
-* Formula rendering
-* Adaptive chunk packing
-* Parallel indexing
-* Incremental indexing
-* Metadata-aware retrieval
-* Hybrid lexical + vector retrieval
-* Cross-document artifact linking
+------------------------------------------------------------------------
 
----
+# Acknowledgements
 
-# Goals
+Built using modern open-source tooling including LlamaParse, Sentence
+Transformers, ChromaDB, BM25, and Cross-Encoder reranking models.
 
-The objective of this project is not simply to split documents.
-
-The goal is to build a document indexing pipeline that preserves semantic structure, minimizes information loss, and provides a strong foundation for Retrieval-Augmented Generation systems.
-
-Rather than optimizing solely for embedding efficiency, the architecture prioritizes maintainability, extensibility, and faithful representation of the original document.
+------------------------------------------------------------------------

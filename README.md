@@ -1,3 +1,5 @@
+<h1 align="center">LOTUS Engine</h1>
+
 <p align="center">
   <strong>A Structure-Aware Hybrid Retrieval Engine for Retrieval-Augmented Generation (RAG)</strong>
 </p>
